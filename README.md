@@ -17,9 +17,9 @@ Este repositório atua como a "casca" da aplicação, sendo responsável por:
 
 ## 🛠️ Stack Tecnológica
 
-*   **Framework:** React 18+ com TypeScript.
-*   **Build Tool:** Vite (utilizando `@originjs/vite-plugin-federation`).
-*   **Estilização:** Tailwind CSS (Arquitetura de Grid Responsiva).
+*   **Framework:** React 19 com TypeScript.
+*   **Build Tool:** Vite (utilizando `@module-federation/vite`).
+*   **Estilização:** Tailwind CSS planejado (Arquitetura de Grid Responsiva) — ainda não instalado, a UI atual é provisória.
 *   **Estratégia de Micro Frontends:** Module Federation (Runtime Integration).
 
 ---
