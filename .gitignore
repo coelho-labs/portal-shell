@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Module Federation (tipos consumidos de remotes)
+@mf-types
+.mf-types
+.dev-server
+
+# tsc -b (incremental) artifacts
+*.tsbuildinfo
