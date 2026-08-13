@@ -19,7 +19,7 @@ Este repositório atua como a "casca" da aplicação, sendo responsável por:
 
 *   **Framework:** React 19 com TypeScript.
 *   **Build Tool:** Vite (utilizando `@module-federation/vite`).
-*   **Estilização:** Tailwind CSS planejado (Arquitetura de Grid Responsiva) — ainda não instalado, a UI atual é provisória.
+*   **Estilização:** Tailwind CSS v4 + shadcn/ui (Base UI + Nova) com tokens oklch e suporte a dark mode.
 *   **Estratégia de Micro Frontends:** Module Federation (Runtime Integration).
 
 ---
@@ -41,10 +41,18 @@ Para simular um ambiente corporativo de larga escala, o projeto foi dividido em 
 Diferente de um monólito, esta arquitetura permite que novas ferramentas (ex: Retro, Daily Check-in) sejam adicionadas ao portal sem a necessidade de re-deploy do Shell. Isso demonstra a viabilidade de escalar o time de desenvolvimento, onde cada squad poderia ser dono de uma ferramenta específica.
 
 ### 2. UI/UX e Monetização Estratégica
-O layout foi projetado em **CSS Grid** para reservar "gavetas" laterais estáticas para anúncios (Skyscrapers). O uso de um Micro Frontend dedicado para o AdSense garante que o carregamento de scripts externos não bloqueie o render principal das ferramentas de negócio.
+O layout usa **CSS Grid** para reservar "gavetas" laterais estáticas para anúncios (Skyscrapers). O uso de um Micro Frontend dedicado para o AdSense garante que o carregamento de scripts externos não bloqueie o render principal das ferramentas de negócio. O **Host é dono do tema**: controla o dark mode (`.dark` + `colorScheme`, chave `coelho-theme`) em runtime, e os remotes consomem os mesmos tokens de design — mantendo a identidade visual consistente entre módulos.
 
 ### 3. Integração de IA
 O Portal consome serviços de IA através de um backend robusto em FastAPI, utilizando técnicas de *Few-shot prompting* para calibrar estimativas de esforço de forma neutra e técnica.
+
+---
+
+## 🎨 UI, Tema e Layout
+
+*   **Design System:** shadcn/ui sobre **Tailwind v4** (CSS-first) e **Base UI** — componentes em `src/components/ui/`, tokens oklch em `src/index.css`, alias `@` para `src/`.
+*   **Tema (cross-MFE):** o host alterna `.dark` no `<html>` via `useTheme()` (`src/hooks/use-theme.ts`), persiste em `coelho-theme` (localStorage) e evita flash com um script anti-FOUC no `index.html`. Os remotes duplicam os tokens e seguem o tema do host.
+*   **Layout Core-driven:** header `sticky` com marca, navegação e seletor de tema; coluna central (`<main>`) flanqueada por gavetas laterais de 200px (slots de anúncio — integração com o remote de AdSense é futura).
 
 ---
 
@@ -58,6 +66,13 @@ npm install
 
 # Rodar em desenvolvimento
 npm run dev
+
+# Verificação padrão de uma mudança
+npm run lint
+npm run build
+
+# Preview do build de produção
+npm run preview
 ```
 
 *Nota: Por ser um orquestrador, certifique-se de que os projetos remotos (ex: planning-poker-mfe) também estejam em execução para a renderização completa das rotas.*

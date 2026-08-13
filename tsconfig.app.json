@@ -22,10 +22,13 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
 
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    
     "paths": {
+      "@/*": ["./src/*"],
       "*": ["./@mf-types/*"]
     }
-
   },
   "include": ["src", "@mf-types"]
 }
