@@ -17,8 +17,8 @@ const AdSlot = lazy(() =>
 );
 
 
-const VignetteOverlay = lazy(() =>
-  loadRemote<{ default: ComponentType }>('content-delivery/VignetteOverlay').then(
+const LoadingPlus = lazy(() =>
+  loadRemote<{ default: ComponentType }>('content-delivery/LoadingPlus').then(
     (mod) => ({ default: mod?.default ?? ((): null => null) as ComponentType }),
   ),
 );
@@ -67,7 +67,7 @@ export default function App() {
                 }
               />
             </Routes>
-            <VignetteOverlay />
+            <LoadingPlus />
           </main>
           <AdSlot side="direito" />
         </div>
