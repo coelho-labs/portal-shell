@@ -12,6 +12,11 @@ export default function mfConfig(env: Record<string, string>) {
         name: "planning-poker",
         entry: env.VITE_PLANNING_POKER_ENTRY ?? "http://localhost:4175/mf-manifest.json",
       },
+      "content-delivery": {
+        type: "module",
+        name: "content-delivery",
+        entry: env.VITE_CONTENT_DELIVERY_ENTRY ?? "http://localhost:4176/mf-manifest.json",
+      },
     },
     shared: {
       "react": { singleton: true, requiredVersion: dependencies["react"] },

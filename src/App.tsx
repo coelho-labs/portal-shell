@@ -10,28 +10,31 @@ const PlanningPoker = lazy(() =>
   ),
 );
 
-function AdSlot({ side }: { side: 'esquerdo' | 'direito' }) {
-  return (
-    <aside className="hidden lg:block">
-      <div className="sticky top-20 flex h-[calc(100svh-5rem)] items-center justify-center rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-        Ad slot {side} — remote AdSense
-      </div>
-    </aside>
-  );
-}
+const AdSlot = lazy(() =>
+  loadRemote<{ default: ComponentType<{ side: string }> }>('content-delivery/AdBannerLateral').then(
+    (mod) => ({ default: mod?.default ?? ((): null => null) as ComponentType }),
+  ),
+);
+
+
+const VignetteOverlay = lazy(() =>
+  loadRemote<{ default: ComponentType }>('content-delivery/VignetteOverlay').then(
+    (mod) => ({ default: mod?.default ?? ((): null => null) as ComponentType }),
+  ),
+);
 
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="flex min-h-svh flex-col bg-background text-foreground">
-        <header className="sticky top-0 z-10 h-20 border-b border-border bg-background/95 backdrop-blur">
+      <div className="app-shell flex min-h-svh flex-col bg-background text-foreground">
+        <header className="sticky top-0 z-10 h-20 bg-background/95 backdrop-blur">
           <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-4 px-4">
             <Link to="/" className="text-base font-semibold">
-              Coelho Labs · Portal
+              Coelho Labs · Home
             </Link>
             <nav className="flex items-center gap-2 text-sm">
               <Link to="/" className="rounded-md px-2 py-1 transition-colors hover:bg-accent">
-                Home
+                Inicio
               </Link>
               <Link
                 to="/planning"
@@ -44,9 +47,9 @@ export default function App() {
           </div>
         </header>
 
-        <div className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 gap-4 px-4 py-4 lg:grid-cols-[200px_1fr_200px]">
+        <div className="px-8 grid w-full flex-1 grid-cols-1 gap-4 py-4 lg:grid-cols-[200px_1fr_200px]">
           <AdSlot side="esquerdo" />
-          <main className="min-w-0">
+          <main className="relative min-h-100 w-full max-w-9xl mx-auto">
             <Routes>
               <Route index element={<Home />} />
               <Route
@@ -64,6 +67,7 @@ export default function App() {
                 }
               />
             </Routes>
+            <VignetteOverlay />
           </main>
           <AdSlot side="direito" />
         </div>

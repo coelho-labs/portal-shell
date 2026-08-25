@@ -52,7 +52,7 @@ function Home() {
 
       <div className="relative w-full before:absolute before:-top-[4.5px] before:left-0 before:border-[5px] before:border-transparent before:border-l-border before:content-[''] after:absolute after:-top-[4.5px] after:right-0 after:border-[5px] after:border-transparent after:border-r-border after:content-['']"></div>
 
-      <section className="flex flex-col border-t border-border text-center lg:flex-row lg:text-left">
+      <section className="flex border-t border-border text-center lg:flex-row lg:text-left">
         <div
           id="docs"
           className="flex-1 border-b border-border px-5 py-6 lg:border-b-0 lg:border-r lg:p-8"
