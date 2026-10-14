@@ -10,18 +10,35 @@ export default function mfConfig(env: Record<string, string>) {
       "planning-poker": {
         type: "module",
         name: "planning-poker",
-        entry: env.VITE_PLANNING_POKER_ENTRY ?? "http://localhost:4175/mf-manifest.json",
+        entry:
+          env.VITE_PLANNING_POKER_ENTRY ??
+          "http://localhost:4175/mf-manifest.json",
       },
       "content-delivery": {
         type: "module",
         name: "content-delivery",
-        entry: env.VITE_CONTENT_DELIVERY_ENTRY ?? "http://localhost:4176/mf-manifest.json",
+        entry:
+          env.VITE_CONTENT_DELIVERY_ENTRY ??
+          "http://localhost:4176/mf-manifest.json",
+      },
+      "json-formatter": {
+        type: "module",
+        name: "json-formatter",
+        entry:
+          env.VITE_JSON_FORMATTER_ENTRY ??
+          "http://localhost:4177/mf-manifest.json",
       },
     },
     shared: {
-      "react": { singleton: true, requiredVersion: dependencies["react"] },
-      "react-dom": { singleton: true, requiredVersion: dependencies["react-dom"] },
-      "react-router-dom": { singleton: true, requiredVersion: dependencies["react-router-dom"] },
+      react: { singleton: true, requiredVersion: dependencies["react"] },
+      "react-dom": {
+        singleton: true,
+        requiredVersion: dependencies["react-dom"],
+      },
+      "react-router-dom": {
+        singleton: true,
+        requiredVersion: dependencies["react-router-dom"],
+      },
     },
     dts: {
       consumeTypes: {
