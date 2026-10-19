@@ -13,22 +13,6 @@ const PlanningPoker = lazy(() =>
   ),
 );
 
-const AdSlot = lazy(() =>
-  loadRemote<{ default: ComponentType<{ side: string }> }>(
-    "content-delivery/AdBannerLateral",
-  ).then((mod) => ({
-    default: mod?.default ?? (((): null => null) as ComponentType),
-  })),
-);
-
-const LoadingPlus = lazy(() =>
-  loadRemote<{ default: ComponentType }>("content-delivery/LoadingPlus").then(
-    (mod) => ({
-      default: mod?.default ?? (((): null => null) as ComponentType),
-    }),
-  ),
-);
-
 const JSONFormatter = lazy(() =>
   loadRemote<{ default: ComponentType }>("json-formatter/RemoteAppEntry").then(
     (mod) => ({
@@ -40,7 +24,7 @@ const JSONFormatter = lazy(() =>
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="app-shell flex min-h-svh flex-col bg-background text-foreground">
+      <div className="flex flex-col w-full min-h-screen bg-background text-foreground antialiased">
         <header className="sticky top-0 z-10 h-20 bg-background/95 backdrop-blur">
           <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-4 px-4">
             <Link to="/" className="text-base font-semibold">
@@ -64,87 +48,93 @@ export default function App() {
           </div>
         </header>
 
-        <div className="px-8 portal-shell-grid w-full flex-1 min-h-0 lg:min-h-[calc(100svh-5rem)] py-4">
-          <div className="portal-shell-rail">
-            <AdSlot side="esquerdo" />
-          </div>
-          <main className="relative flex flex-col min-w-0 w-full max-w-9xl mx-auto">
-            <div className="flex-1 min-h-0">
-              <Routes>
-                <Route index element={<Home />} />
-                <Route
-                  path="/planning/*"
-                  element={
-                    <Suspense
-                      fallback={
-                        <Loading>
-                          <div className="p-4 text-muted-foreground">
-                            Carregando Planning Poker...
-                          </div>
-                        </Loading>
-                      }
-                    >
-                      <div className="w-full h-full animate-in fade-in-0 slide-in-from-bottom-1 duration-300">
-                        <PlanningPoker />
+        <main className="flex flex-1 flex-col w-full max-w-7xl mx-auto sm:px-6 md:px-8 py-6">
+          <Routes>
+            <Route
+              index
+              element={
+                <Suspense
+                  fallback={
+                    <Loading>
+                      <div className="p-4 text-muted-foreground">
+                        Carregando pagina inicial...
                       </div>
-                    </Suspense>
+                    </Loading>
                   }
-                />
-                <Route
-                  path="/json-formatter/*"
-                  element={
-                    <Suspense
-                      fallback={
-                        <Loading>
-                          <div className="p-4 text-muted-foreground">
-                            Carregando Formatador e Validador JSON...
-                          </div>
-                        </Loading>
-                      }
-                    >
-                      <div className="w-full h-full animate-in fade-in-0 slide-in-from-bottom-1 duration-300">
-                        <JSONFormatter />
+                >
+                  <div className="flex flex-1 flex-col w-full animate-in fade-in-0 slide-in-from-bottom-1 duration-300">
+                    <Home />
+                  </div>
+                </Suspense>
+              }
+            />
+            <Route
+              path="/planning/*"
+              element={
+                <Suspense
+                  fallback={
+                    <Loading>
+                      <div className="p-4 text-muted-foreground">
+                        Carregando Planning Poker...
                       </div>
-                    </Suspense>
+                    </Loading>
                   }
-                />
-              </Routes>
-              <LoadingPlus />
-            </div>
-            <footer className="mx-auto flex w-full max-w-3xl flex-col items-center justify-between mt-auto px-5 py-6 gap-2 text-sm text-muted-foreground sm:flex-row">
-              <p>
-                Desenvolvido por{" "}
-                <span className="font-medium text-foreground">
-                  Herivelton Coelho
-                </span>
-              </p>
-              <div className="flex items-center gap-2">
-                <a
-                  href="https://github.com/coelho-labs"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="transition-colors hover:text-foreground hover:underline underline-offset-4"
                 >
-                  Coelho Labs no GitHub
-                </a>
-                <span aria-hidden="true" className="text-muted-foreground/50">
-                  ·
-                </span>
-                <a
-                  href="https://github.com/hericoelho"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="transition-colors hover:text-foreground hover:underline underline-offset-4"
+                  <div className="flex flex-1 flex-col w-full animate-in fade-in-0 slide-in-from-bottom-1 duration-300">
+                    <PlanningPoker />
+                  </div>
+                </Suspense>
+              }
+            />
+            <Route
+              path="/json-formatter/*"
+              element={
+                <Suspense
+                  fallback={
+                    <Loading>
+                      <div className="p-4 text-muted-foreground">
+                        Carregando Formatador e Validador JSON...
+                      </div>
+                    </Loading>
+                  }
                 >
-                  GitHub de Herivelton Coelho
-                </a>
-              </div>
-            </footer>
-          </main>
-          <div className="portal-shell-rail">
-            <AdSlot side="direito" />
+                  <div className="flex flex-1 flex-col w-full animate-in fade-in-0 slide-in-from-bottom-1 duration-300">
+                    <JSONFormatter />
+                  </div>
+                </Suspense>
+              }
+            />
+          </Routes>
+        </main>
+        <footer className="flex flex-col w-full max-w-7xl mx-auto items-center justify-between gap-2 py-6 text-sm text-muted-foreground sm:flex-row sm:px-6 md:px-8">
+          <p>
+            Desenvolvido por{" "}
+            <span className="font-medium text-foreground">
+              Herivelton Coelho
+            </span>
+          </p>
+          <div className="flex items-center gap-2">
+            <a
+              href="https://github.com/coelho-labs"
+              target="_blank"
+              rel="noreferrer"
+              className="transition-colors hover:text-foreground hover:underline underline-offset-4"
+            >
+              Coelho Labs no GitHub
+            </a>
+            <span aria-hidden="true" className="text-muted-foreground/50">
+              ·
+            </span>
+            <a
+              href="https://github.com/hericoelho"
+              target="_blank"
+              rel="noreferrer"
+              className="transition-colors hover:text-foreground hover:underline underline-offset-4"
+            >
+              GitHub de Herivelton Coelho
+            </a>
           </div>
-        </div>
+        </footer>
       </div>
     </BrowserRouter>
   );

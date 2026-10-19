@@ -26,8 +26,8 @@ const TOOLS = [
 
 function Home() {
   return (
-    <div className="flex h-full flex-col">
-      <section className="flex flex-col items-center gap-3 px-5 pt-10 pb-8 text-center lg:pt-14">
+    <div className="flex flex-col flex-1 w-full">
+      <section className="flex flex-col items-center gap-3 px-5 pt-10 pb-8 text-center lg:gap-5 lg:pt-14">
         <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
           Coelho Labs
         </span>
@@ -35,11 +35,12 @@ function Home() {
           Portal Coelho Labs
         </h1>
         <p className="max-w-xl text-base text-muted-foreground">
-          Hub de ferramentas inteligentes projetado para elevar a produtividade
-          e a colaboração de times de tecnologia.
+          Um hub de ferramentas inteligentes, rápidas e minimalistas projetado
+          para impulsionar a produtividade e a colaboração de equipes de
+          tecnologia.
         </p>
       </section>
-      <section className="px-5 pb-12">
+      <section className="my-auto px-5 pb-8">
         <div className="mx-auto w-full max-w-3xl">
           <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Ferramentas
