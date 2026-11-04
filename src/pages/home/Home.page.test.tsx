@@ -34,5 +34,11 @@ describe("Given the home page", () => {
     it("then it should describe both available tools", () => {
       expect(screen.getByText("Ferramentas")).toBeInTheDocument();
     });
+
+    it("then it should describe the JSON formatter capabilities", () => {
+      expect(
+        screen.getByText(/Formate, valide e analise seus payloads JSON/),
+      ).toBeInTheDocument();
+    });
   });
 });

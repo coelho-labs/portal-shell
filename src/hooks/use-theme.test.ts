@@ -3,32 +3,38 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useTheme } from "@/hooks/use-theme.ts";
 
 const STORAGE_KEY = "coelho-theme";
+const DARK_QUERY = "(prefers-color-scheme: dark)";
 
 type MatchMediaStub = {
   setMatches: (matches: boolean) => void;
   listenerCount: () => number;
+  queries: () => string[];
 };
 
 function stubMatchMedia(initialMatches: boolean): MatchMediaStub {
   const state = { matches: initialMatches };
   const listeners = new Set<() => void>();
+  const queries: string[] = [];
 
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    get matches() {
-      return state.matches;
-    },
-    media: query,
-    onchange: null,
-    addEventListener: (_event: string, listener: () => void) => {
-      listeners.add(listener);
-    },
-    removeEventListener: (_event: string, listener: () => void) => {
-      listeners.delete(listener);
-    },
-    addListener: () => {},
-    removeListener: () => {},
-    dispatchEvent: () => false,
-  }));
+  vi.stubGlobal("matchMedia", (query: string) => {
+    queries.push(query);
+    return {
+      get matches() {
+        return state.matches;
+      },
+      media: query,
+      onchange: null,
+      addEventListener: (event: string, listener: () => void) => {
+        if (event === "change") listeners.add(listener);
+      },
+      removeEventListener: (event: string, listener: () => void) => {
+        if (event === "change") listeners.delete(listener);
+      },
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    };
+  });
 
   return {
     setMatches(matches) {
@@ -36,6 +42,7 @@ function stubMatchMedia(initialMatches: boolean): MatchMediaStub {
       listeners.forEach((listener) => listener());
     },
     listenerCount: () => listeners.size,
+    queries: () => queries,
   };
 }
 
@@ -79,6 +86,13 @@ describe("Given no theme stored and the system prefers light", () => {
     it("then it should not persist a theme", () => {
       expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     });
+
+    it("then it should query the dark color scheme media", () => {
+      expect(
+        media.queries().length > 0 &&
+          media.queries().every((query) => query === DARK_QUERY),
+      ).toBe(true);
+    });
   });
 
   describe("when the system preference changes to dark", () => {
@@ -113,6 +127,45 @@ describe("Given no theme stored and the system prefers light", () => {
 
     it("then it should stop listening to system preference changes", () => {
       expect(media.listenerCount()).toBe(0);
+    });
+  });
+});
+
+describe("Given no theme stored and the system prefers dark", () => {
+  let media: MatchMediaStub;
+
+  beforeEach(() => {
+    media = stubMatchMedia(true);
+  });
+
+  describe("when the hook mounts", () => {
+    beforeEach(() => {
+      result = renderHook(() => useTheme()).result;
+    });
+
+    it("then it should resolve to dark", () => {
+      expect(result.current.resolved).toBe("dark");
+    });
+  });
+
+  describe("when the system preference changes to light", () => {
+    beforeEach(() => {
+      result = renderHook(() => useTheme()).result;
+      act(() => {
+        media.setMatches(false);
+      });
+    });
+
+    it("then it should resolve to light", () => {
+      expect(result.current.resolved).toBe("light");
+    });
+
+    it("then it should remove the dark class from the document", () => {
+      expect(document.documentElement).not.toHaveClass("dark");
+    });
+
+    it("then it should set the document color scheme to light", () => {
+      expect(document.documentElement.style.colorScheme).toBe("light");
     });
   });
 });
@@ -168,23 +221,26 @@ describe("Given a stored dark theme and the system prefers light", () => {
 });
 
 describe("Given a stored light theme and the system prefers dark", () => {
-  let media: MatchMediaStub;
-
   beforeEach(() => {
-    media = stubMatchMedia(true);
+    stubMatchMedia(true);
     localStorage.setItem(STORAGE_KEY, "light");
   });
 
-  describe("when the system preference changes", () => {
+  describe("when the hook mounts", () => {
     beforeEach(() => {
       result = renderHook(() => useTheme()).result;
-      act(() => {
-        media.setMatches(false);
-      });
     });
 
-    it("then it should keep resolving to light", () => {
+    it("then it should keep the stored theme", () => {
+      expect(result.current.theme).toBe("light");
+    });
+
+    it("then it should resolve to light", () => {
       expect(result.current.resolved).toBe("light");
+    });
+
+    it("then it should not mark the document as dark", () => {
+      expect(document.documentElement).not.toHaveClass("dark");
     });
   });
 });

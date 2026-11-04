@@ -12,6 +12,12 @@ describe("Given the footer", () => {
       expect(screen.getByText("Herivelton Coelho")).toBeInTheDocument();
     });
 
+    it("then it should keep the words of the credit sentence apart", () => {
+      expect(screen.getByText(/^Desenvolvido por/)).toHaveTextContent(
+        "Desenvolvido por Herivelton Coelho",
+      );
+    });
+
     it("then the Coelho Labs link should point to the GitHub organization", () => {
       expect(
         screen.getByRole("link", { name: "Coelho Labs no GitHub" }),
