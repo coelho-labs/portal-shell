@@ -1,85 +1,150 @@
-# 🏛️ Portal Shell (MFE Host) - Coelho Labs
+# 🏛️ Coelho Labs · Portal Shell
 
-O **Portal Shell** é o orquestrador central (Host) do ecossistema de ferramentas da **Coelho Labs**. Este projeto utiliza a arquitetura de **Micro Frontends (MFE)** para entregar uma experiência de usuário unificada, enquanto mantém o desenvolvimento e o deploy de suas funcionalidades totalmente desacoplados.
+> O host de Micro Frontends do **Coelho Labs** — um hub de ferramentas inteligentes, rápidas e minimalistas para a produtividade e a colaboração de times de tecnologia.
 
----
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Module Federation](https://img.shields.io/badge/Module_Federation-MFE-8A2BE2)](https://module-federation.io)
 
-## 🚀 Visão Geral da Arquitetura
+## 🌐 O que é a Coelho Labs
 
-Este repositório atua como a "casca" da aplicação, sendo responsável por:
+A **Coelho Labs** é um laboratório de produtos digitais focado em ferramentas para equipes de tecnologia. O ecossistema é organizado como um conjunto de **Micro Frontends independentes**, com desenvolvimento e deploy desacoplados, unidos por contratos explícitos de Module Federation.
 
-*   **Orquestração de Módulos:** Consumo dinâmico de micro-apps remotos via **Module Federation**.
-*   **Layout Global:** Gerenciamento de Shell UI (Navbar, Sidebar e containers de anúncios).
-*   **Gerenciamento de Estado Global:** Compartilhamento de contextos e autenticação entre MFEs.
-*   **Monetização Não-Intrusiva:** Integração de uma camada de anúncios (AdSense) via projeto remoto dedicado, isolando scripts de terceiros da lógica de negócio.
+Este repositório é a **casca** desse ecossistema. Ele não contém regras de negócio: seu papel é oferecer layout global, roteamento, tema, carregamento de remotes e uma experiência visual consistente entre as ferramentas.
 
----
+## 🧩 O ecossistema
 
-## 🛠️ Stack Tecnológica
+| Repositório | Papel | Integração com o Host |
+| --- | --- | --- |
+| **portal-shell** (este) | Host MFE / casca do ecossistema | — |
+| **planning-poker-mfe** | Feature MFE de Planning Poker (salas, votação, sugestões com IA) | `loadRemote` em `/planning/*` · dev `:4175` |
+| **json-formatter-mfe** | Utility MFE de JSON 100% client-side (formatar, validar, minificar) | `loadRemote` em `/json-formatter/*` · dev `:4177` |
+| **planning-poker-service** | Backend FastAPI (REST + WebSocket + LLM) | consumido pelo `planning-poker-mfe` |
 
-*   **Framework:** React 19 com TypeScript.
-*   **Build Tool:** Vite (utilizando `@module-federation/vite`).
-*   **Estilização:** Tailwind CSS v4 + shadcn/ui (Base UI + Nova) com tokens oklch e suporte a dark mode.
-*   **Estratégia de Micro Frontends:** Module Federation (Runtime Integration).
+> Parte dos repositórios do ecossistema é privada.
 
----
+## 🧭 O que este repositório faz
 
-## 🧩 O Ecossistema (Distribuição de Repositórios)
+- Orquestra remotes via **Module Federation** (`mf-manifest.json` + DTS).
+- Mantém o **layout global**: header com navegação, `<main>` e footer.
+- Fornece o **roteamento unificado** com React Router 7.
+- É dono do **tema em runtime** (`.dark`, `colorScheme` e `coelho-theme`).
+- Exibe estados de carregamento com `Suspense` + componente `Loading`.
+- Compartilha `react`, `react-dom` e `react-router-dom` como singletons.
 
-Para simular um ambiente corporativo de larga escala, o projeto foi dividido em repositórios independentes:
+**Não pertence a este repo:** regras de negócio, WebSocket, IA, backend e analytics.
 
-1.  **Portal Shell (Este repo):** O orquestrador central [Público].
-2.  **[Planning Poker MFE](https://github.com):** Módulo de planning poker estimativa por IA [Público].
-3.  **Metrics Engine:** Camada privada de anúncios e analytics [Privado].
-4.  **Planning Poker Service:** Backend em Python/FastAPI com WebSockets e integração com LLMs [Privado].
+## 🗺️ Rotas
 
----
+| Rota | Conteúdo |
+| --- | --- |
+| `/` | Home com o catálogo de ferramentas |
+| `/planning/*` | `planning-poker-mfe` |
+| `/json-formatter/*` | `json-formatter-mfe` |
 
-## 🧠 Decisões de Engenharia
+## 🚀 Rodando localmente
 
-### 1. Por que Micro Frontends?
-Diferente de um monólito, esta arquitetura permite que novas ferramentas (ex: Retro, Daily Check-in) sejam adicionadas ao portal sem a necessidade de re-deploy do Shell. Isso demonstra a viabilidade de escalar o time de desenvolvimento, onde cada squad poderia ser dono de uma ferramenta específica.
-
-### 2. UI/UX e Monetização Estratégica
-O layout usa **CSS Grid** para reservar "gavetas" laterais estáticas para anúncios (Skyscrapers). O uso de um Micro Frontend dedicado para o AdSense garante que o carregamento de scripts externos não bloqueie o render principal das ferramentas de negócio. O **Host é dono do tema**: controla o dark mode (`.dark` + `colorScheme`, chave `coelho-theme`) em runtime, e os remotes consomem os mesmos tokens de design — mantendo a identidade visual consistente entre módulos.
-
-### 3. Integração de IA
-O Portal consome serviços de IA através de um backend robusto em FastAPI, utilizando técnicas de *Few-shot prompting* para calibrar estimativas de esforço de forma neutra e técnica.
-
----
-
-## 🎨 UI, Tema e Layout
-
-*   **Design System:** shadcn/ui sobre **Tailwind v4** (CSS-first) e **Base UI** — componentes em `src/components/ui/`, tokens oklch em `src/index.css`, alias `@` para `src/`.
-*   **Tema (cross-MFE):** o host alterna `.dark` no `<html>` via `useTheme()` (`src/hooks/use-theme.ts`), persiste em `coelho-theme` (localStorage) e evita flash com um script anti-FOUC no `index.html`. Os remotes duplicam os tokens e seguem o tema do host.
-*   **Layout Core-driven:** header `sticky` com marca, navegação e seletor de tema; coluna central (`<main>`) flanqueada por gavetas laterais de 200px (slots de anúncio — integração com o remote de AdSense é futura).
-
----
-
-## ⚙️ Configuração Local
-
-Este projeto depende de MFEs remotos para funcionar plenamente.
+Pré-requisito: Node compatível com o campo `engines` do `package.json`.
 
 ```bash
-# Instalar dependências
 npm install
-
-# Rodar em desenvolvimento
+cp .env.example .env
 npm run dev
-
-# Verificação padrão de uma mudança
-npm run lint
-npm run build
-
-# Preview do build de produção
-npm run preview
 ```
 
-*Nota: Por ser um orquestrador, certifique-se de que os projetos remotos (ex: planning-poker-mfe) também estejam em execução para a renderização completa das rotas.*
+O Host sobe em `http://localhost:5173` (porta padrão do Vite). As rotas remotas exigem os MFEs correspondentes em execução:
 
----
+```bash
+# planning-poker-mfe
+npm run dev   # http://localhost:4175
 
-## 📩 Contato
+# json-formatter-mfe
+npm run dev   # http://localhost:4177
+```
 
-Desenvolvido por **Herivelton Coelho**  
-[LinkedIn](https://linkedin.com) | [Portfólio Coelho Labs](https://github.com)
+### Variáveis de ambiente
+
+| Variável | Uso |
+| --- | --- |
+| `VITE_PLANNING_POKER_ENTRY` | entry/manifest do `planning-poker-mfe` |
+| `VITE_JSON_FORMATTER_ENTRY` | entry/manifest do `json-formatter-mfe` |
+
+### Scripts
+
+| Comando | O que faz |
+| --- | --- |
+| `npm run dev` | Vite em desenvolvimento (`:5173`) |
+| `npm run build` | typecheck dos projetos app/node + build de produção |
+| `npm run preview` | preview do build (`:4173`) |
+| `npm run lint` | ESLint |
+| `npm run types` | typecheck do app |
+| `npm run test` | Vitest (unitários + integração) |
+| `npm run test:watch` | Vitest em modo watch |
+| `npm run test:types` | typecheck dos testes |
+| `npm run test:mutation` | Stryker incremental |
+| `npm run test:mutation:full` | Stryker completo (`--force`, sem cache incremental) |
+
+## 🧱 Arquitetura MFE
+
+```mermaid
+graph LR
+  Shell[portal-shell :5173] -->|loadRemote| PP[planning-poker-mfe :4175]
+  Shell -->|loadRemote| JF[json-formatter-mfe :4177]
+  PP --> API[planning-poker-service]
+```
+
+Contratos principais:
+
+- Remotes são registrados na forma de objeto, com `type: "module"`, `name` igual à chave e `entry` apontando para `mf-manifest.json`.
+- O Host consome via `loadRemote()` + `React.lazy`, sempre dentro de `Suspense`.
+- `react`, `react-dom` e `react-router-dom` são singletons — duplicá-los quebra o runtime.
+- Remotes com rota expõem `./RemoteAppEntry` com `<Routes>`, **sem** `<BrowserRouter>` e **sem** `<main>`.
+
+## 🎨 Design system e tema
+
+- **Tailwind v4** CSS-first, com tokens oklch em `src/index.css`.
+- **shadcn/ui sobre Base UI** (`@base-ui/react`), usando a prop `render` no lugar de `asChild`.
+- Componentes de UI em `src/components/ui/`; alias `@` → `src/`.
+- O **Host é dono do tema**: alterna `.dark` no `<html>`, persiste em `coelho-theme` e evita FOUC com script inline no `index.html`.
+- Remotes replicam os tokens e seguem o `.dark` controlado pelo Host.
+
+## 🧪 Qualidade
+
+- **Vitest + Testing Library** com jsdom.
+- Testes co-localizados (`*.test.ts`/`*.test.tsx`) no padrão **Given / when / then**.
+- Cobertura de mutação com **Stryker** e gate em **90%** (`thresholds.break`).
+- Fora do escopo de mutação: `src/components/ui/**`, `src/lib/utils.ts`, `src/test/**` e configs.
+
+```bash
+npm run test
+npm run test:types
+npm run test:mutation:full
+```
+
+## 📁 Estrutura
+
+```text
+src/
+  components/          # shell + componentes shadcn/ui
+  hooks/use-theme.ts   # tema cross-MFE
+  pages/home/          # Home e catálogo
+  test/                # setup, polyfills e tipos de teste
+  App.tsx              # layout + rotas + remotes
+  main.tsx             # entrypoint
+module-federation.config.ts
+stryker.config.json
+vitest.config.ts
+```
+
+## 🤝 Contribuição
+
+Este projeto é mantido de forma independente. Leia o [CONTRIBUTING.md](./CONTRIBUTING.md) antes de abrir qualquer contribuição.
+
+## 📬 Contato
+
+Desenvolvido por **Herivelton Coelho**.
+
+- [Coelho Labs no GitHub](https://github.com/coelho-labs)
+- [GitHub de Herivelton Coelho](https://github.com/hericoelho)

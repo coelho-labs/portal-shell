@@ -7,9 +7,9 @@
 
 ## Contexto e Escopo
 
-- Ambiente de desenvolvimento do ecossistema de Micro Frontends da Coelho Labs, atuando no Portal-shell core do federation, ele orquestra a "casca": layout global, slots de remotes, contextos compartilhados e overlay de transição.
+- Ambiente de desenvolvimento do ecossistema de Micro Frontends da Coelho Labs, atuando no Portal-shell core do federation, ele orquestra a "casca": layout global, slots de remotes, roteamento e tema.
 - Stack de vanguarda e estrita: React 19 (com React Compiler), React Router 7, Vite 8, Tailwind v4, Shadcn (Base UI) e TypeScript 6.
-- Arquitetura descentralizada e orientada a contratos: comunicação via Module Federation (@module-federation/vite oficial v1.20+)
+- Arquitetura descentralizada e orientada a contratos: comunicação via Module Federation (`@module-federation/vite` oficial).
 
 ## Público-Alvo
 
@@ -22,7 +22,7 @@ Três arquivos, papéis distintos — não duplicar conteúdo:
 
 - **AGENTS.md** (este): contrato atemporal — arquitetura MFE, regras de stack e armadilhas reais. SEM status de implementação. Só muda quando uma convenção muda. Otimizado para IA: cabeçalhos escaneáveis, tabelas, caminhos exatos, imperativo, sem narrativa. Nunca hardcodar valores voláteis (versões → "confie no `npm ls`"; datas → só no plan.md).
 - **README.md**: onboarding humano — o que é, como rodar, stack, contrato MFE de alto nível.
-- **plan.md**: único lugar com status. Contém status por fase, decisões datadas (log), pendências, armadilhas aprendidas e "última atualização (commit base)".
+- **plan.md**: único lugar com status. Contém status por fase, decisões datadas (log), armadilhas aprendidas e "última atualização (commit base)".
 
 Regras de manutenção:
 - Ao pedir "atualiza os docs", propor o diff ANTES de escrever e aguardar aprovação.
@@ -41,28 +41,34 @@ Regras de manutenção:
 
 ## Descrição
 
-Este repositório é o **Core/Host** do ecossistema de Micro Frontends da Coelho Labs. Ele orquestra a "casca": layout global, slots de remotes, contextos compartilhados e overlay de transição. **Não contém regras de negócio** (planning poker, IA, backend FastAPI) — vivem em outros repositórios.
+Este repositório é o **Core/Host** do ecossistema de Micro Frontends da Coelho Labs. Ele orquestra a "casca": layout global, slots de remotes, roteamento e tema. **Não contém regras de negócio** (planning poker, IA, backend FastAPI) — vivem em outros repositórios.
 
 ## Comandos
 
 ```bash
-npm run dev      # servidor dev (Vite, porta 3000 por padrão)
-npm run build    # tsc -b && vite build  (typecheck faz parte do build)
-npm run lint     # eslint .
-npm run preview  # servidor de produção (porta 4173)
+npm run dev              # servidor dev (Vite, porta 5173 por padrão)
+npm run build            # tsc -b tsconfig.app.json tsconfig.node.json && vite build (typecheck faz parte do build)
+npm run lint             # eslint .
+npm run types            # typecheck do projeto da app
+npm run preview          # servidor de produção (porta 4173)
+npm run test             # Vitest (unitários + integração)
+npm run test:watch       # Vitest em watch
+npm run test:types       # typecheck dos testes (tsconfig.test.json)
+npm run test:mutation    # Stryker incremental
+npm run test:mutation:full # Stryker completo (--force)
 ```
 
-- Não há test runner nem suíte de testes.
-- Verificação padrão de uma mudança: `npm run lint` e `npm run build`.
+- Verificação padrão de uma mudança: `npm run test && npm run test:types && npm run lint && npm run build`.
 
 ## Module Federation (não confunda!)
 
-- O pacote instalado/configurado é **`@module-federation/vite`** (oficial, v1.20.x). README e docs citam `@originjs/vite-plugin-federation` — **está desatualizado, ignore**. Não instale o `@originjs` para novas features.
+- O pacote instalado/configurado é **`@module-federation/vite`** (oficial). README e docs citam `@originjs/vite-plugin-federation` — **está desatualizado, ignore**. Não instale o `@originjs` para novas features. Versões: confie no `npm ls`.
 - A config do federation fica em `module-federation.config.ts` (separada), importada pelo plugin `federation()` no `vite.config.ts`.
 - **`module-federation.config.ts` exporta uma FUNÇÃO `mfConfig(env)`**, não um objeto estático. O `vite.config.ts` usa `defineConfig(({ mode }) => ...)` + `loadEnv(mode, process.cwd())` e injeta `mfConfig(env)` no `federation(...)`. Assim URLs de remote mudam por ambiente via `.env` (`VITE_*`), sem editar código. O `loadEnv` é importado SÓ no `vite.config.ts` — no `module-federation.config.ts` o `env` chega como parâmetro (importar lá dá `no-unused-vars`/`noUnusedLocals`).
 
 ### Remote (provider)
 
+- Remotes registrados em `module-federation.config.ts`: **`planning-poker`** (dev `:4175`) e **`json-formatter`** (dev `:4177`). Cada um tem uma variável `VITE_*_ENTRY` própria em `.env.example`.
 - Registre o remote em `remotes` usando a **forma de objeto**:
   ```ts
   "planning-poker": {
@@ -77,7 +83,7 @@ npm run preview  # servidor de produção (porta 4173)
 
 ### Consumo das rotas remotas
 
-- **Use `loadRemote` de `@module-federation/runtime`** (dependência direta, versão pinada à que o plugin usa — hoje `2.8.2`) combinado com `React.lazy`:
+- **Use `loadRemote` de `@module-federation/runtime`** (dependência direta, pinada à versão que o plugin usa — confirme com `npm ls`) combinado com `React.lazy`:
   ```tsx
   const PlanningPoker = lazy(() =>
     loadRemote<{ default: ComponentType }>("planning-poker/RemoteAppEntry").then(
@@ -98,15 +104,15 @@ npm run preview  # servidor de produção (porta 4173)
 - É **artefato gerado de outro repo**: gitignorado (`@mf-types`, `.mf-types`, `.dev-server`) E ignorado no eslint (`globalIgnores` no `eslint.config.js`) — senão `no-explicit-any` dispara nos d.ts gerados.
 - Quando `@mf-types/planning-poker/` existir, a tipagem do `loadRemote` fica completa. Sem o remote rodando, o build do host NÃO quebra (só degrada a tipagem).
 
-### Requisitos no remote (repo planning-poker)
+### Requisitos no remote (repos com rota)
 
 - `manifest: true` e `dts: true` explícitos.
 - CORS: em dev o Vite já envia; em build/preview o servidor estático do remote precisa mandar `Access-Control-Allow-Origin` — sem CORS, `RUNTIME-001` / `Failed to get remoteEntry exports`.
-- `server.origin` e `base` consistentes (dev: `http://localhost:4175`; prod: domínio final).
+- `server.origin` e `base` consistentes (dev: a porta do próprio remote; prod: domínio final).
 - O `RemoteAppEntry` exposto NÃO deve montar seu próprio `<BrowserRouter>` — `react-router-dom` é singleton compartilhado e o host fornece o roteamento; exponha componentes/elementos de rota (sem router próprio).
 - **NÃO renderize `<main>`** no RemoteAppEntry — o host já emite o landmark `<main>` do layout; dois `<main>` não-ocultos é HTML inválido. Use `<section>`/`<div>`.
 - **Sem regras globais `body`/`#root`** no CSS do remote — vazam e brigam com o layout/background do host.
-- **Fase 2 (tema) pendente:** espelhar `src/index.css` do host (tokens oklch + `@custom-variant dark`) no remote e importá-lo no `RemoteAppEntry` (o host só recebe o CSS via o entry consumido); migrar cores hardcoded para `var(--token)` e remover blocos `@media (prefers-color-scheme)` (o `.dark` do host já resolve).
+- **Tema:** o remote replica `src/index.css` do host (tokens oklch + `@custom-variant dark`) e o importa no `RemoteAppEntry` consumido (o host só recebe o CSS via o entry). Use `var(--token)` em vez de cores hardcoded e não redefina `:root`/`.dark` — o host controla o `.dark`.
 
 ### Troubleshooting (conhecidos)
 
@@ -116,14 +122,18 @@ npm run preview  # servidor de produção (porta 4173)
 - `tsconfig.tsbuildinfo` solto na raiz → artefato do `tsc -b`, já no `.gitignore` (`*.tsbuildinfo`).
 - `shadcn add` criando pasta literal `@/` na raiz → faltam `compilerOptions.baseUrl`+`paths` no `tsconfig.json` raiz (ver seção de tsconfig).
 - `<button>` dentro de `<button>` no ThemeToggle → o `Trigger` do Base UI renderiza `<button>`; use `render={<Button/>}` (ver seção UI/Design System).
-- `react-refresh/only-export-components` em `src/components/ui/*` mesmo com `allowConstantExport` → normal na v0.5.4 (`cva()` é `CallExpression`); a regra é `off` escopado a `ui/**` (ver seção lint).
+- `react-refresh/only-export-components` em `src/components/ui/*` mesmo com `allowConstantExport` → normal no preset atual (`cva()` é `CallExpression`); a regra é `off` escopado a `ui/**` (ver seção lint).
 - `react-hooks/set-state-in-effect` → derive o estado no render; `setState` síncrono em effect é erro. `setState` só em callback de subscription (padrão de referência: `use-theme.ts`).
+- Testes aparecendo com erro/`any` na IDE → projeto inferido; garanta a referência a `tsconfig.test.json` na solution (`tsconfig.json`).
+- Stryker listando apenas um arquivo no resumo → é o `clearTextReporter.skipFull: true`, que oculta arquivos com 100% dos mutantes mortos; o score agregado não muda.
+- Mutation score abaixo do gate → investigue mutantes equivalentes antes de baixar o threshold (ver seção de mutation testing).
+- Erro de render com remote resolvendo `null` gera `RuntimeError` no Stryker → capture com Error Boundary no teste para virar falha de asserção normal.
 
 ## Stack real (verifique, não confie no README)
 
 - **React 19** (não 18), **react-router-dom v7**, **Vite 8**, **TypeScript ~6**.
-- **`@module-federation/runtime` v2.8.x** é dependência direta (não só transitiva), pinada à versão que `@module-federation/vite` usa — garante UMA única instância do runtime entre plugin e `loadRemote`.
-- **Tailwind v4 + shadcn/ui instalados** (README desatualizado). Visual usa tokens do design system — ver seções "UI / Design System" e "Tema". A Home page é o demo do Vite remasterizado em Tailwind (assets em `src/assets/`, sprite `public/icons.svg`).
+- **`@module-federation/runtime`** é dependência direta (não só transitiva), pinada à versão que `@module-federation/vite` usa — garante UMA única instância do runtime entre plugin e `loadRemote`. Versões: `npm ls`.
+- **Tailwind v4 + shadcn/ui instalados**. O visual usa tokens do design system — ver seções "UI / Design System" e "Tema". A Home é o catálogo de ferramentas do portal em Tailwind, com componentes de `src/components/ui/` e ícones `lucide-react`.
 - **React Compiler** habilitado via `@rolldown/plugin-babel` + `reactCompilerPreset()` no `vite.config.ts` — memoização é automática, não otimize manualmente com `useMemo`/`useCallback` sem necessidade.
 
 ## UI / Design System (shadcn + Tailwind v4 + Base UI)
@@ -180,9 +190,9 @@ describe("Given a valid JSON typed in the editor", () => {
 - **Um gatilho por When** — dois cliques distintos = dois When, nunca dois `await` no mesmo `beforeEach`.
 - **DRY por aninhamento**: vários When sob o mesmo Given; vários Then sob o mesmo When. O `beforeEach` externo roda antes do interno, então cada When herda o Given sem repetir setup.
 - Prefixos literais e no caso exato: `Given` / `when` / `then`. Redação: `then` + sujeito + `should` (`then the output should …`, `then it should …`), nunca `then formats the json`.
-- **Títulos 100% em inglês** — `describe` e `it`, sem pt-BR e sem acento. Queries por nome acessível continuam em pt-BR (`getByRole("button", { name: /formatar/i })`, porque a UI é pt-BR); mensagens de `translateJsonErrorMessage`/`fileError` são dados assertados, não títulos.
+- **Títulos 100% em inglês** — `describe` e `it`, sem pt-BR e sem acento. Queries por nome acessível continuam em pt-BR (`getByRole("button", { name: /formatar/i })`, porque a UI é pt-BR); mensagens de erro da UI são dados assertados, não títulos.
 - Estado compartilhado: `let` no escopo do `describe`, atribuído no `beforeEach` (`strict` + `noUnusedLocals`).
-- Testes refletem o **código atual**, não o layout-alvo deste documento: não escrever `then` para recurso inexistente (ex.: toggle Texto/Árvore enquanto `Tool.page` não consumir `view`).
+- Testes refletem o **código atual**, não um layout-alvo: não escrever `then` para recurso inexistente na implementação.
 
 ### Escopo de cobertura
 
@@ -191,27 +201,31 @@ describe("Given a valid JSON typed in the editor", () => {
 - **Co-localizado**: `src/hooks/use-theme.ts`, `src/components/footer.test.tsx`, etc. `src/test/` guarda só infra, nunca testes. Só `*.test.ts(x)` roda no Vitest **e** entra em `npm run test:types`.
 - `tsconfig.app.json` exclui `src/**/*.test.ts(x)` e `src/test/**`: o `tsc -b` do `npm run build` não compila testes nem exige `@types/node` no projeto da app. Os tipos dos testes são verificados por `npm run test:types` (`tsconfig.test.json`, com `types: ["vite/client", "node"]`).
 
-### decisão de estratégia tomada em outros projetos
-- Exemplo de decisão de estratégia tomada em outros projetos, pois é importante manter a coerencia 
-#### CodeMirror em jsdom (decisão de estratégia)
+### Infra de teste e fronteiras do browser
 
-- Mockar `@/components/code-editor/CodeEditor.tsx` com um stub `<textarea>` controlado nos testes de `Tool.page`, `JsonInput` e `JsonOutput` (`vi.mock` no `beforeEach` do Given, pois é pré-condição do cenário).
-- CM6 real só em `CodeEditor.test.tsx` — isola o risco de jsdom num arquivo e mantém a suíte rápida.
-
-#### Infra de teste e fronteiras do browser
-
-- `src/test/setup.ts`: `cleanup` + jest-dom. Polyfills de jsdom em `src/test/jsdom-polyfills.ts` importado pelo setup: `Range.prototype.getClientRects`/`getBoundingClientRect`, `Element.prototype.scrollIntoView`, `ResizeObserver` (Base UI `Select`/`Tooltip` usam) e `matchMedia` quando necessário.
-- O runner é `vitest.config.ts` com `globals: false` → importar `describe`/`it`/`expect`/`vi`/`beforeEach` de `"vitest"`. `clearMocks`/`restoreMocks` estão ligados, mas **não** desfazem `vi.stubGlobal` — habilitar `unstubGlobals`/`unstubEnvs` (ou limpar no `afterEach`), senão o stub de um When vaza para o próximo teste.
-- Router em teste: `MemoryRouter` + `initialEntries`. Nunca `BrowserRouter` (o router é do host) — `RemoteAppEntry` é testado como contrato de rotas.
+- `src/test/setup.ts`: `cleanup` + jest-dom; importa `src/test/jsdom-polyfills.ts`. Apenas `matchMedia` está ativo ali — `Range.prototype.getClientRects`/`getBoundingClientRect`, `Element.prototype.scrollIntoView` e `ResizeObserver` estão comentados; reative apenas se o componente sob teste exigir (Base UI `Select`/`Tooltip`, CodeMirror).
+- O runner é `vitest.config.ts` com `globals: false` → importar `describe`/`it`/`expect`/`vi`/`beforeEach` de `"vitest"`. `clearMocks`/`restoreMocks`/`unstubGlobals`/`unstubEnvs` já estão ligados — stub de um teste não vaza para o próximo.
+- Router em teste: `MemoryRouter` + `initialEntries` para páginas/componentes isolados. Exceção: o teste do `App` pode usar `BrowserRouter` porque o próprio `App` é dono do router; `RemoteAppEntry` é testado como contrato de rotas, sempre sob `MemoryRouter`.
+- Módulos remotos: mocke `@module-federation/runtime` (`vi.mock` com `vi.hoisted`) em vez de depender de um remote em execução.
 - Verificação de uma mudança: `npm run test` + `npm run test:types` (+ `npm run lint`/`npm run build` quando o teste alterar código).
 
 | Fronteira                        | Existe no jsdom? | Como mockar                                                        |
 | -------------------------------- | ---------------- | ------------------------------------------------------------------ |
+| `matchMedia`                     | não              | stub com estado + listeners; cobrir `"change"` e cleanup           |
 | `navigator.clipboard.writeText`  | não              | `vi.stubGlobal`/`defineProperty` + `vi.fn()`                        |
 | `URL.createObjectURL`/`revoke…`  | não              | `vi.stubGlobal`; o `revoke` roda em `setTimeout(…, 0)`              |
 | `DataTransfer` (drop de arquivo) | não              | `{ files: [file] }` + `fireEvent.drop(el, { dataTransfer })`        |
 | `HTMLAnchorElement.click`        | sim              | `vi.spyOn` para provar o download sem navegar                       |
-| timers (`copyStatus` 2000 ms)    | —                | `vi.useFakeTimers()` por When + `userEvent.setup({ advanceTimers: vi.advanceTimersByTime })` |
+| timers                           | —                | `vi.useFakeTimers()` por When + `userEvent.setup({ advanceTimers: vi.advanceTimersByTime })` |
+
+### Mutation testing (Stryker)
+
+- Config em `stryker.config.json`; runner `vitest`; incremental por padrão. `npm run test:mutation:full` força a execução completa.
+- Gate: `thresholds.break: 90` — score abaixo de 90 sai com código de erro. `high`/`low` só colorem o relatório.
+- `clearTextReporter.skipFull: true` oculta do resumo os arquivos com 100% dos mutantes mortos; o score agregado continua correto. Os relatórios completos ficam em `reports/mutation/` (gitignored).
+- Fora do `mutate`: testes, `src/test/**`, `src/components/ui/**` e `src/lib/utils.ts` (vendorizados/gerados). Não amplie o escopo de mutação para `ui/**` — o próximo `shadcn add` sobrescreve.
+- Mutantes equivalentes são esperados (ex.: fallback `"system"` redundante e dependency array constante em `use-theme.ts`). Não baixe o gate nem adicione testes artificiais para eles; documente no `plan.md`.
+- Erro de render com remote `null` vira `RuntimeError` no Stryker: use Error Boundary no teste para converter em falha de asserção normal.
 
 ## TypeScript / lint (armadilhas reais do tsconfig)
 
@@ -219,15 +233,18 @@ describe("Given a valid JSON typed in the editor", () => {
 - `verbatimModuleSyntax: true`: use `import type` para importações somente de tipo.
 - `allowImportingTsExtensions: true` + bundler mode: imports usam extensão explícita (ex: `./pages/home/Home.page.tsx`).
 - `noUnusedLocals`/`noUnusedParameters` ativos.
-- `eslint.config.js` (flat config): `react-refresh/only-export-components` é `off` APENAS em `src/components/ui/**`, num bloco **separado e DEPOIS** do bloco principal (ordem do array = precedência). Motivo: shadcn exporta consts de variantes via `cva(...)`; `allowConstantExport` (já default no preset vite) na v0.5.4 só cobre `Literal`/`UnaryExpression`/`TemplateLiteral`/`BinaryExpression` — `CallExpression` (`cva`) não passa, então sem o escopo `off` o lint quebra em todo componente ui.
+- Projetos do `tsconfig.json` (solution): `tsconfig.app.json`, `tsconfig.node.json` e `tsconfig.test.json`. O `npm run build` roda `tsc -b tsconfig.app.json tsconfig.node.json`; os testes NÃO entram no projeto da app (excluídos por `tsconfig.app.json`) e são checados só por `npm run test:types` (`tsconfig.test.json`, com `types: ["vite/client", "node"]`).
+- `eslint.config.js` (flat config): `react-refresh/only-export-components` é `off` APENAS em `src/components/ui/**`, num bloco **separado e DEPOIS** do bloco principal (ordem do array = precedência). Motivo: shadcn exporta consts de variantes via `cva(...)`; `allowConstantExport` do preset só cobre expressões literais — `CallExpression` (`cva`) não passa, então sem o escopo `off` o lint quebra em todo componente ui.
 - `react-hooks/set-state-in-effect` (v7) ativo e é regra séria: derive estado no render; `setState` síncrono em effect quebra o lint.
-- `globalIgnores` já cobre `dist`, `**/@mf-types/**`, `.mf-types` e `.dev-server`.
+- `globalIgnores` já cobre `dist`, `**/@mf-types/**`, `.mf-types`, `.dev-server`, `.stryker-tmp` e `reports`.
 
 ## Contrato arquitetural
 
-- **Layout Core-driven — IMPLEMENTADO** (`src/App.tsx`): header `sticky top-0 h-20` (marca + nav + `ThemeToggle`), grid `grid-cols-1 lg:grid-cols-[200px_1fr_200px]`, gavetas de anúncio `hidden lg:block` com `sticky top-20 h-[calc(100svh-5rem)]` — slots placeholder que vão para o remote de AdSense (repo separado) —, `<main>` isolado na coluna central `min-w-0`.
-- **Fluxo "Criar Sala" (vignette) — FUTURO:** o overlay de transição é gerenciado pelo Core (visual), injetando texto dinâmico + `onCloseCallback`; a feature remota (planning-poker) gerencia estado de negócio e usa `Promise.all` entre `POST /rooms` (backend FastAPI, repo separado) e um timer local de **5000ms**, redirecionando para `/room/:id` só com ambas resolvidas. Sem BFF — frontend fala direto com a API/WebSocket do FastAPI.
+- **Layout Core-driven** (`src/App.tsx`): header `sticky top-0 h-20` (marca + nav + `ThemeToggle`), `<main>` único com `max-w-7xl` (`flex-1`, `py-6`) contendo as `<Routes>`, e `<Footer />` ao final do fluxo. O wrapper é `flex flex-col min-h-screen` com tokens de tema.
+- **Rotas**: `/` (Home), `/planning/*` (`planning-poker/RemoteAppEntry`) e `/json-formatter/*` (`json-formatter/RemoteAppEntry`). Cada rota remota fica em `Suspense` com fallback `Loading`.
+- **Fallback de remote indisponível**: `loadRemote` pode resolver `null`; o `App` converte para um componente nulo via `mod?.default ?? ((): null => null)`. Não há Error Boundary de produção — um erro de rede do remote ainda pode borbulhar.
+- **Sem regras de negócio no Host**: fluxos como criação de sala, votação e IA pertencem ao `planning-poker-mfe` / backend; o Host só fornece rota, layout e tema.
 
 ## Notas
 
-- adSense/metrics e backend FastAPI são privados e ficam em outros repositórios.
+- Backend FastAPI e demais serviços do ecossistema são privados e ficam em repositórios separados.
