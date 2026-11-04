@@ -24,11 +24,12 @@
 
     "baseUrl": ".",
     "ignoreDeprecations": "6.0",
-    
+
     "paths": {
       "@/*": ["./src/*"],
       "*": ["./@mf-types/*"]
     }
   },
-  "include": ["src", "@mf-types"]
+  "include": ["src", "@mf-types"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test/**"]
 }
