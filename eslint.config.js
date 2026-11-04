@@ -11,6 +11,8 @@ export default defineConfig([
     "**/@mf-types/**",
     "**/.mf-types/**",
     "**/.dev-server/**",
+    ".stryker-tmp",
+    "reports",
   ]),
   {
     files: ["**/*.{ts,tsx}"],

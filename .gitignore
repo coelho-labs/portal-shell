@@ -30,3 +30,8 @@ dist-ssr
 
 # tsc -b (incremental) artifacts
 *.tsbuildinfo
+
+# Stryker (mutation testing)
+.stryker-tmp
+reports
+stryker.log
