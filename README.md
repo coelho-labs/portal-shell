@@ -7,6 +7,7 @@
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![Module Federation](https://img.shields.io/badge/Module_Federation-MFE-8A2BE2)](https://module-federation.io)
+[![CI/CD Pipeline - Portal Shell](https://github.com/coelho-labs/portal-shell/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/coelho-labs/portal-shell/actions/workflows/ci-cd.yml)
 
 ## 🌐 O que é a Coelho Labs
 
