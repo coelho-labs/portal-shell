@@ -32,7 +32,9 @@ jobs:
         run: npx vitest run --reporter=default --reporter=github-actions --reporter=junit --outputFile.junit=./reports/unit-tests.xml
 
       - name: Run Mutation Tests
-        run: GITHUB_STEP_SUMMARY=/dev/null npm run test:mutation
+        run: npx stryker run --reporters clear-text,html,json
+        env:
+          GITHUB_ACTIONS: 'false'
 
   # 🚀 JOB 2: Deploy on Vercel
   # deploy-to-vercel:
