@@ -30,13 +30,9 @@ jobs:
 
       - name: Run Unit Tests
         run: npx vitest run --reporter=default --reporter=junit --outputFile.junit=./reports/unit-tests.xml
-        env:
-          GITHUB_STEP_SUMMARY: '' # Impede que o Vitest injete resumos parciais no Summary do GitHub
 
       - name: Run Mutation Tests
-        run: npm run test:mutation
-        env:
-          GITHUB_STEP_SUMMARY: '' # Impede que os sub-runs do Stryker poluam o Summary do GitHub
+        run: GITHUB_STEP_SUMMARY=/dev/null npm run test:mutation
 
   # 🚀 JOB 2: Deploy on Vercel
   deploy-to-vercel:
