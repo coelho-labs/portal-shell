@@ -32,9 +32,23 @@ jobs:
         run: npx vitest run --reporter=default --reporter=github-actions --reporter=junit --outputFile.junit=./reports/unit-tests.xml
 
       - name: Run Mutation Tests
-        run: npx stryker run --reporters clear-text,html,json
-        env:
-          GITHUB_ACTIONS: 'false'
+        run: GITHUB_STEP_SUMMARY=/dev/null npm run test:mutation
+
+      - name: Mutation summary
+        if: always()
+        run: |
+          f=reports/mutation/mutation.json
+          [ -f "$f" ] || exit 0
+          jq -r '
+            [.files[].mutants[].status] | group_by(.) | map({(.[0]): length}) | add as $c
+            | ($c.Killed // 0) as $k
+            | ($c.Timeout // 0) as $t
+            | ($c.Survived // 0) as $s
+            | ($c.NoCoverage // 0) as $n
+            | ($k + $t + $s + $n) as $valid
+            | (if $valid == 0 then 0 else ((($k + $t) * 10000 / $valid | round) / 100) end) as $score
+            | "## Mutation Testing\n\n- **Score**: \($score)%\n- Killed: \($k + $t)\n- Survived: \($s)\n- No coverage: \($n)\n"
+          ' "$f" >> "$GITHUB_STEP_SUMMARY"
 
   # 🚀 JOB 2: Deploy on Vercel
   # deploy-to-vercel:
