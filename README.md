@@ -11,7 +11,7 @@
 
 ## 🌐 O que é a [Coelho Labs](https://coelho-labs.vercel.app)
 
-A [**Coelho Labs**](https://coelho-labs.vercel.app) é um laboratório de produtos digitais focado em ferramentas para equipes de tecnologia. O ecossistema é organizado como um conjunto de **Micro Frontends independentes**, com desenvolvimento e deploy desacoplados, unidos por contratos explícitos de Module Federation.
+O [**Coelho Labs**](https://coelho-labs.vercel.app) é um laboratório de produtos digitais focado em ferramentas para equipes de tecnologia. O ecossistema é organizado como um conjunto de **Micro Frontends independentes**, com desenvolvimento e deploy desacoplados, unidos por contratos explícitos de Module Federation.
 
 Este repositório é a **casca** desse ecossistema. Ele não contém regras de negócio: seu papel é oferecer layout global, roteamento, tema, carregamento de remotes e uma experiência visual consistente entre as ferramentas.
 
