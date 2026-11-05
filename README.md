@@ -2,6 +2,8 @@
 
 > O host de Micro Frontends do **Coelho Labs** — um hub de ferramentas inteligentes, rápidas e minimalistas para a produtividade e a colaboração de times de tecnologia.
 
+> https://coelho-labs.vercel.app
+
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev)
